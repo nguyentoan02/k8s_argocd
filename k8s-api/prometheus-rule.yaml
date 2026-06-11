@@ -11,6 +11,21 @@ spec:
   groups:
     - name: demo-api.slo
       rules:
+        - alert: DemoApiHighErrorRateDemo
+          expr: |
+            (
+              sum(rate(flask_http_request_total{namespace="demo",service="demo-api",status=~"5.."}[1m]))
+              /
+              clamp_min(sum(rate(flask_http_request_total{namespace="demo",service="demo-api"}[1m])), 0.001)
+            ) > 0.2
+          for: 30s
+          labels:
+            severity: critical
+            slo: availability
+            service: demo-api
+          annotations:
+            summary: demo-api error rate is above 20% in the last minute
+            description: demo-api is intentionally degraded and should trigger Alertmanager email quickly for the lab demo.
         - alert: DemoApiHighErrorRateFastBurn
           expr: |
             (

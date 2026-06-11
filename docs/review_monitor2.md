@@ -108,7 +108,7 @@ Suggested release shape:
 
 - image: `w9-demo-api:3`
 - version: `v3-bad`
-- `ERROR_RATE: "0.3"` or `"0.5"`
+- `ERROR_RATE: "0.5"`
 
 Files involved:
 
@@ -122,7 +122,7 @@ env:
   - name: VERSION
     value: v3-bad
   - name: ERROR_RATE
-    value: "0.3"
+    value: "0.5"
 ```
 
 Build/load command:
@@ -206,6 +206,18 @@ Then:
 3. verify alert goes `Pending` then `Firing` in Prometheus
 4. confirm email arrives in `nvtvlog234@gmail.com`
 
+To make the email fire quickly during the demo, the repo now includes:
+
+- `DemoApiHighErrorRateDemo`
+
+This alert fires when:
+
+- 5xx error ratio is greater than `20%`
+- measured over `1m`
+- sustained for `30s`
+
+This is intentionally more demo-friendly than the slower multi-window burn-rate alerts.
+
 ## Proof package to capture for mentor
 
 ### Proof 1. GitOps overview
@@ -261,33 +273,25 @@ Capture:
 
 ### Step 1
 
-Merge the Alertmanager configuration
+Build and load `w9-demo-api:3`
 
 ### Step 2
 
-Prepare `v3-bad` in `k8s-api/rollout.yaml`
+Push and merge the `v3-bad` release
 
 ### Step 3
 
-Build and load `w9-demo-api:3`
+Open `demo-web` and create continuous traffic
 
 ### Step 4
 
-Push and merge the bad release
+Capture `AnalysisRun` and rollout failure evidence
 
 ### Step 5
 
-Generate traffic through `demo-web`
-
-### Step 6
-
-Capture `AnalysisRun` and rollout failure evidence
-
-### Step 7
-
 Run `git revert` and capture recovery
 
-### Step 8
+### Step 6
 
 Confirm the alert email arrives
 
