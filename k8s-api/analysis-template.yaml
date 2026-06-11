@@ -10,11 +10,10 @@ spec:
     - name: namespace
     - name: service
   metrics:
-    - name: error-rate
-      interval: 15s
-      count: 4
-      successCondition: result[0] < 0.2
-      failureCondition: result[0] >= 0.2
+    - name: success-rate
+      interval: 30s
+      count: 3
+      successCondition: result[0] >= 0.95
       failureLimit: 1
       provider:
         prometheus:
@@ -26,7 +25,7 @@ spec:
                   flask_http_request_total{
                     namespace="{{args.namespace}}",
                     service="{{args.service}}",
-                    status=~"5.."
+                    status!~"5.."
                   }[1m]
                 )
               )
