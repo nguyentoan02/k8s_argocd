@@ -1,0 +1,17 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: demo-api
+  namespace: demo
+  labels:
+    app: demo-api
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  selector:
+    matchLabels:
+      app: demo-api
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
