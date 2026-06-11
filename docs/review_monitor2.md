@@ -76,7 +76,7 @@ What exists:
 
 What is missing:
 
-- one bad release, for example `v3-bad`
+- one bad release, now prepared as `v5-bad`
 - observed `AnalysisRun` failure
 - observed rollout stop/abort instead of promoting to 100%
 
@@ -101,13 +101,13 @@ Reason:
 Goal:
 
 - create a backend release that intentionally degrades quality
-- let the current `AnalysisTemplate` detect low success rate
+- let the current `AnalysisTemplate` detect high error ratio directly
 - confirm the rollout does not fully promote
 
 Suggested release shape:
 
-- image: `w9-demo-api:4`
-- version: `v4-bad`
+- image: `w9-demo-api:5`
+- version: `v5-bad`
 - `ERROR_RATE: "1.0"`
 
 Files involved:
@@ -117,10 +117,10 @@ Files involved:
 Recommended manifest changes:
 
 ```yaml
-image: w9-demo-api:4
+image: w9-demo-api:5
 env:
   - name: VERSION
-    value: v4-bad
+    value: v5-bad
   - name: ERROR_RATE
     value: "1.0"
 ```
@@ -130,7 +130,7 @@ Build/load command:
 ```bash
 cd /d/Gitops_W9
 export MINIKUBE_PROFILE=minikube
-export API_IMAGE=w9-demo-api:4
+export API_IMAGE=w9-demo-api:5
 ./build-minikube-images.sh
 ```
 
@@ -147,6 +147,13 @@ Expected proof:
 - `AnalysisRun` becomes `Failed`
 - rollout remains paused, degraded, or aborted
 - the bad revision does not become the only stable revision
+
+Why this revision should fail more reliably:
+
+- the canary now returns `100%` 5xx responses
+- the analysis template now evaluates direct `error-rate`
+- the failure threshold is `>= 20%`
+- the measurement window is shorter for demo speed
 
 ### B. Git revert rollback proof
 
@@ -273,11 +280,11 @@ Capture:
 
 ### Step 1
 
-Build and load `w9-demo-api:4`
+Build and load `w9-demo-api:5`
 
 ### Step 2
 
-Push and merge the `v3-bad` release
+Push and merge the `v5-bad` release
 
 ### Step 3
 
