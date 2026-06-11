@@ -167,7 +167,7 @@ Rollout flow:
 4. pause for `60s`
 5. `100%`
 
-The `AnalysisTemplate` evaluates success rate from Prometheus metrics.
+The `AnalysisTemplate` evaluates Prometheus metrics to decide whether the release is safe to continue.
 
 ## Evidence
 
@@ -207,7 +207,25 @@ Canary rollout is executed through `Rollout` and `AnalysisRun`.
 
 ![Canary 6](images/canary6.png)
 
-### 5. Alerts and analysis
+### 5. Alert delivery
+
+Alertmanager is able to route notifications to the configured personal email inbox.
+
+![Mail 1](images/mail1.png)
+
+![Mail 2](images/mail2.png)
+
+### 6. Rollout abort evidence
+
+The bad canary release is blocked and the stable ReplicaSet is kept in place.
+
+![Rollout 1](images/rollout1.png)
+
+![Rollout 2](images/rollout2.png)
+
+![Rollout 3](images/rollout3.png)
+
+### 7. Alerts and analysis
 
 Metrics and alerting provide the evaluation signal for release quality.
 
@@ -217,7 +235,7 @@ Metrics and alerting provide the evaluation signal for release quality.
 
 ![Alert 3](images/alert3.png)
 
-### 6. Release state
+### 8. Release state
 
 Release snapshot from the deployment flow.
 
@@ -232,8 +250,9 @@ Suggested presentation flow:
 3. open Prometheus and show `demo-api` metrics
 4. show `PrometheusRule` and the Alertmanager receiver
 5. show the canary rollout for the good `v2` release
-6. inject faults and confirm the alert reaches email
-7. show Git-based rollback using `git revert`
+6. show the bad release abort evidence for `v5-bad`
+7. show the alert email received in the inbox
+8. show Git-based rollback using `git revert`
 
 ## Rollback
 
@@ -258,3 +277,5 @@ The project currently includes:
 - `AnalysisTemplate`
 - Prometheus metrics
 - a verified good canary release flow
+- alert email delivery evidence
+- rollout abort evidence for a bad canary release
