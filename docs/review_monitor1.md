@@ -12,6 +12,7 @@ Toi da hoan thien phan tiep theo de dua app vao flow GitOps/Kubernetes:
   - `argocd/apps/frontend.yaml`
 - them manifest backend:
   - `k8s-api/analysis-template.yaml`
+  - `k8s-api/prometheus-rule.yaml`
   - `k8s-api/rollout.yaml`
   - `k8s-api/service.yaml`
   - `k8s-api/service-monitor.yaml`
@@ -32,6 +33,8 @@ Toi da hoan thien phan tiep theo de dua app vao flow GitOps/Kubernetes:
 Ca 2 deu duoc cai qua `root` app-of-apps, khong can `kubectl apply` tung app.
 Toi da bo sung `sync-wave` o cap `Application` de `root` tao theo thu tu:
 
+- wave `0`: `kube-prometheus-stack`, `argo-rollouts`
+- wave `0`: `monitoring-config`, `kube-prometheus-stack`, `argo-rollouts`
 - wave `0`: `kube-prometheus-stack`, `argo-rollouts`
 - wave `1`: `demo-api`
 - wave `2`: `demo-web`
@@ -97,6 +100,7 @@ Toi co chu y:
 - no phu thuoc metric name mac dinh cua `prometheus-flask-exporter`
 
 Neu mentor muon giai thich query, day la file can dem ra.
+
 
 ## 5. Frontend va backend trong cluster
 
