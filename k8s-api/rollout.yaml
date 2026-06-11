@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: api
-          image: w9-demo-api:5
+          image: w9-demo-api:2
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -31,9 +31,9 @@ spec:
             - name: PORT
               value: "8080"
             - name: VERSION
-              value: v5-bad
+              value: v2
             - name: ERROR_RATE
-              value: "1.0"
+              value: "0"
             - name: RESPONSE_DELAY_MS
               value: "0"
           readinessProbe:
