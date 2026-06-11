@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monitor Demo UI</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <p class="eyebrow">Observability Demo</p>
+      <h1>Frontend for canary and monitoring review</h1>
+      <p class="lead">
+        A small static UI that calls the backend, shows version and health,
+        and can generate enough traffic to observe Prometheus metrics.
+      </p>
+      <div class="hero-actions">
+        <button id="call-api-button" class="btn btn-primary" type="button">Call API</button>
+        <button id="burst-button" class="btn btn-secondary" type="button">Burst x20</button>
+      </div>
+    </section>
+
+    <section class="grid">
+      <article class="card card-emphasis">
+        <div class="card-head">
+          <span class="card-label">Backend status</span>
+          <span id="status-pill" class="pill pill-idle">Idle</span>
+        </div>
+        <dl class="stats">
+          <div>
+            <dt>Version</dt>
+            <dd id="api-version">-</dd>
+          </div>
+          <div>
+            <dt>Delay</dt>
+            <dd id="api-delay">-</dd>
+          </div>
+          <div>
+            <dt>Error rate</dt>
+            <dd id="api-error-rate">-</dd>
+          </div>
+        </dl>
+      </article>
+
+      <article class="card">
+        <div class="card-head">
+          <span class="card-label">Traffic summary</span>
+        </div>
+        <dl class="stats">
+          <div>
+            <dt>Success</dt>
+            <dd id="success-count">0</dd>
+          </div>
+          <div>
+            <dt>Failure</dt>
+            <dd id="failure-count">0</dd>
+          </div>
+          <div>
+            <dt>Last HTTP</dt>
+            <dd id="last-status">-</dd>
+          </div>
+        </dl>
+      </article>
+    </section>
+
+    <section class="card output-card">
+      <div class="card-head">
+        <span class="card-label">Latest response</span>
+      </div>
+      <pre id="response-panel" class="response-panel">Press "Call API" to fetch /api/info</pre>
+    </section>
+  </main>
+
+  <script src="./app.js"></script>
+</body>
+</html>

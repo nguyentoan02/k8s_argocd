@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-api
+  namespace: demo
+  labels:
+    app: demo-api
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  selector:
+    app: demo-api
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
