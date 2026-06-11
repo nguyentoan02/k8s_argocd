@@ -12,7 +12,9 @@ spec:
       kind: CustomResourceDefinition
       jsonPointers:
         - /metadata/annotations
+        - /metadata/labels
         - /metadata/managedFields
+        - /spec
         - /status
   source:
     repoURL: https://argoproj.github.io/argo-helm
