@@ -17,7 +17,10 @@ spec:
           adminPassword: admin12345
         prometheus:
           prometheusSpec:
+            serviceMonitorNamespaceSelector: {}
             serviceMonitorSelectorNilUsesHelmValues: false
+            ruleNamespaceSelector: {}
+            ruleSelectorNilUsesHelmValues: false
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring

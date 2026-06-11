@@ -1,0 +1,63 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: demo-api-slo
+  namespace: demo
+  labels:
+    app: demo-api
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  groups:
+    - name: demo-api.slo
+      rules:
+        - alert: DemoApiHighErrorRateFastBurn
+          expr: |
+            (
+              (
+                sum(rate(flask_http_request_total{namespace="demo",service="demo-api",status=~"5.."}[5m]))
+                /
+                clamp_min(sum(rate(flask_http_request_total{namespace="demo",service="demo-api"}[5m])), 0.001)
+              ) > (14.4 * 0.01)
+            )
+            and
+            (
+              (
+                sum(rate(flask_http_request_total{namespace="demo",service="demo-api",status=~"5.."}[1h]))
+                /
+                clamp_min(sum(rate(flask_http_request_total{namespace="demo",service="demo-api"}[1h])), 0.001)
+              ) > (14.4 * 0.01)
+            )
+          for: 2m
+          labels:
+            severity: critical
+            slo: availability
+            service: demo-api
+          annotations:
+            summary: demo-api is burning error budget too fast
+            description: demo-api error budget burn rate is above 14.4x over both 5m and 1h windows.
+        - alert: DemoApiHighErrorRateSlowBurn
+          expr: |
+            (
+              (
+                sum(rate(flask_http_request_total{namespace="demo",service="demo-api",status=~"5.."}[30m]))
+                /
+                clamp_min(sum(rate(flask_http_request_total{namespace="demo",service="demo-api"}[30m])), 0.001)
+              ) > (6 * 0.01)
+            )
+            and
+            (
+              (
+                sum(rate(flask_http_request_total{namespace="demo",service="demo-api",status=~"5.."}[6h]))
+                /
+                clamp_min(sum(rate(flask_http_request_total{namespace="demo",service="demo-api"}[6h])), 0.001)
+              ) > (6 * 0.01)
+            )
+          for: 5m
+          labels:
+            severity: warning
+            slo: availability
+            service: demo-api
+          annotations:
+            summary: demo-api is slowly burning error budget
+            description: demo-api error budget burn rate is above 6x over both 30m and 6h windows.
