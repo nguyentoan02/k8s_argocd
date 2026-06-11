@@ -6,7 +6,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "0"
 data:
-  MESSAGE: "hello from gitops"
+  MESSAGE: "hello from gitops123"
 ---
 apiVersion: apps/v1
 kind: Deployment
