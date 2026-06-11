@@ -1,6 +1,6 @@
 # W9 Monitoring + Canary
 
-This project extends the morning GitOps lab with a frontend/backend application, observability using Prometheus and Grafana, and progressive delivery using Argo Rollouts.
+This project extends the morning GitOps lab with a frontend/backend application, observability through Prometheus and Grafana, email alerting through Alertmanager, and progressive delivery using Argo Rollouts.
 
 Main goals:
 
@@ -8,6 +8,7 @@ Main goals:
 - deploy `demo-api` and `demo-web`
 - scrape application metrics from `demo-api`
 - evaluate service health with `PrometheusRule`
+- route alert notifications to `nvtvlog234@gmail.com`
 - release safely with `Rollout` and `AnalysisTemplate`
 
 ## Architecture
@@ -15,6 +16,7 @@ Main goals:
 Main components:
 
 - ArgoCD `root` application
+- `monitoring-config`
 - `kube-prometheus-stack`
 - `argo-rollouts`
 - `demo-api` as a `Rollout`
@@ -24,13 +26,14 @@ Repository map:
 
 - `argocd/apps/`
 - `k8s-api/`
+- `k8s-monitoring/`
 - `k8s-web/`
 - `app/api/`
 - `app/web/`
 
 Sync order:
 
-- wave `0`: `kube-prometheus-stack`, `argo-rollouts`
+- wave `0`: `monitoring-config`, `kube-prometheus-stack`, `argo-rollouts`
 - wave `1`: `demo-api`
 - wave `2`: `demo-web`
 
@@ -94,6 +97,16 @@ Open:
 
 - `http://localhost:9090`
 
+### Open Alertmanager
+
+```powershell
+kubectl -n monitoring port-forward svc/kube-prometheus-stack-alertmanager 9093:9093
+```
+
+Open:
+
+- `http://localhost:9093`
+
 ### Prometheus queries
 
 Request count:
@@ -120,9 +133,10 @@ clamp_min(sum(rate(flask_http_request_total{namespace="demo",service="demo-api"}
 
 ### SLO and alerting
 
-File:
+Files:
 
 - `k8s-api/prometheus-rule.yaml`
+- `k8s-monitoring/alertmanager-email-secret.yaml`
 
 Target:
 
@@ -133,6 +147,10 @@ Implemented alerts:
 
 - `DemoApiHighErrorRateFastBurn`
 - `DemoApiHighErrorRateSlowBurn`
+
+Alert receiver:
+
+- `nvtvlog234@gmail.com`
 
 ### Canary
 
@@ -209,12 +227,13 @@ Release snapshot from the deployment flow.
 
 Suggested presentation flow:
 
-1. open ArgoCD and show `root`, `kube-prometheus-stack`, `argo-rollouts`, `demo-api`, and `demo-web`
+1. open ArgoCD and show `root`, `monitoring-config`, `kube-prometheus-stack`, `argo-rollouts`, `demo-api`, and `demo-web`
 2. open `demo-web`, click `Call API`, then `Burst x20`
 3. open Prometheus and show `demo-api` metrics
-4. show `PrometheusRule`
+4. show `PrometheusRule` and the Alertmanager receiver
 5. show the canary rollout for the good `v2` release
-6. show Git-based rollback using `git revert`
+6. inject faults and confirm the alert reaches email
+7. show Git-based rollback using `git revert`
 
 ## Rollback
 
@@ -234,6 +253,7 @@ The project currently includes:
 - frontend and backend running inside Kubernetes
 - `ServiceMonitor`
 - `PrometheusRule`
+- Alertmanager email configuration
 - `Rollout`
 - `AnalysisTemplate`
 - Prometheus metrics
