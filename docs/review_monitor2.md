@@ -106,9 +106,9 @@ Goal:
 
 Suggested release shape:
 
-- image: `w9-demo-api:3`
-- version: `v3-bad`
-- `ERROR_RATE: "0.5"`
+- image: `w9-demo-api:4`
+- version: `v4-bad`
+- `ERROR_RATE: "1.0"`
 
 Files involved:
 
@@ -117,12 +117,12 @@ Files involved:
 Recommended manifest changes:
 
 ```yaml
-image: w9-demo-api:3
+image: w9-demo-api:4
 env:
   - name: VERSION
-    value: v3-bad
+    value: v4-bad
   - name: ERROR_RATE
-    value: "0.5"
+    value: "1.0"
 ```
 
 Build/load command:
@@ -130,7 +130,7 @@ Build/load command:
 ```bash
 cd /d/Gitops_W9
 export MINIKUBE_PROFILE=minikube
-export API_IMAGE=w9-demo-api:3
+export API_IMAGE=w9-demo-api:4
 ./build-minikube-images.sh
 ```
 
@@ -273,7 +273,7 @@ Capture:
 
 ### Step 1
 
-Build and load `w9-demo-api:3`
+Build and load `w9-demo-api:4`
 
 ### Step 2
 
