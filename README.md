@@ -1,20 +1,26 @@
 # W9 Monitoring + Canary
 
-## Scope
+This project extends the morning GitOps lab with a frontend/backend application, observability using Prometheus and Grafana, and progressive delivery using Argo Rollouts.
 
-This repo extends the morning GitOps lab with:
+Main goals:
 
-- `kube-prometheus-stack` via ArgoCD app-of-apps
-- `argo-rollouts` via ArgoCD app-of-apps
+- continue using the ArgoCD `root` app-of-apps pattern
+- deploy `demo-api` and `demo-web`
+- scrape application metrics from `demo-api`
+- evaluate service health with `PrometheusRule`
+- release safely with `Rollout` and `AnalysisTemplate`
+
+## Architecture
+
+Main components:
+
+- ArgoCD `root` application
+- `kube-prometheus-stack`
+- `argo-rollouts`
 - `demo-api` as a `Rollout`
-- `demo-web` as a simple frontend
-- `ServiceMonitor` for Prometheus scraping
-- `PrometheusRule` for SLO-style alerting
-- `AnalysisTemplate` for canary auto-judgement
+- `demo-web` as a `Deployment`
 
-## Repo map
-
-Key paths:
+Repository map:
 
 - `argocd/apps/`
 - `k8s-api/`
@@ -22,12 +28,22 @@ Key paths:
 - `app/api/`
 - `app/web/`
 
-## Runtime design
+Sync order:
+
+- wave `0`: `kube-prometheus-stack`, `argo-rollouts`
+- wave `1`: `demo-api`
+- wave `2`: `demo-web`
+
+## Application overview
 
 ### Frontend
 
 - service: `demo-web`
-- purpose: generate user traffic and show backend version/error state
+- responsibilities:
+  - call the backend
+  - display the current backend version
+  - display runtime error-rate information
+  - generate traffic through `Call API` and `Burst x20`
 
 ### Backend
 
@@ -39,21 +55,9 @@ Key paths:
   - `/api/info`
   - `/metrics`
 
-## GitOps flow
+## Build images into Minikube
 
-The repo keeps the morning `root` application and adds child applications in `argocd/apps/`.
-
-Application order is enforced with sync waves:
-
-- wave `0`: `kube-prometheus-stack`, `argo-rollouts`
-- wave `1`: `demo-api`
-- wave `2`: `demo-web`
-
-This avoids the frontend booting before `demo-api` DNS/service exists.
-
-## Build and load images
-
-For Git Bash:
+Git Bash:
 
 ```bash
 cd /d/Gitops_W9
@@ -61,14 +65,16 @@ export MINIKUBE_PROFILE=minikube
 ./build-minikube-images.sh
 ```
 
-Images:
+For a newer backend release:
 
-- `w9-demo-api:1`
-- `w9-demo-web:1`
+```bash
+export API_IMAGE=w9-demo-api:2
+./build-minikube-images.sh
+```
 
-## Verification
+## Quick verification
 
-### Open frontend in cluster
+### Open the frontend inside the cluster
 
 ```powershell
 kubectl -n demo port-forward svc/demo-web 8081:80
@@ -77,11 +83,6 @@ kubectl -n demo port-forward svc/demo-web 8081:80
 Open:
 
 - `http://localhost:8081`
-
-Generate traffic with:
-
-- `Call API`
-- `Burst x20`
 
 ### Open Prometheus
 
@@ -93,21 +94,21 @@ Open:
 
 - `http://localhost:9090`
 
-## Prometheus queries
+### Prometheus queries
 
-### Request count
+Request count:
 
 ```promql
 flask_http_request_total{namespace="demo",service="demo-api"}
 ```
 
-### Request rate
+Request rate:
 
 ```promql
 sum(rate(flask_http_request_total{namespace="demo",service="demo-api"}[1m]))
 ```
 
-### 5xx error rate
+Error rate:
 
 ```promql
 sum(rate(flask_http_request_total{namespace="demo",service="demo-api",status=~"5.."}[1m]))
@@ -115,98 +116,125 @@ sum(rate(flask_http_request_total{namespace="demo",service="demo-api",status=~"5
 clamp_min(sum(rate(flask_http_request_total{namespace="demo",service="demo-api"}[1m])), 0.001)
 ```
 
-### Success rate used by canary logic
+## SLO, alerting, and canary
 
-```promql
-sum(rate(flask_http_request_total{namespace="demo",service="demo-api",status!~"5.."}[1m]))
-/
-clamp_min(sum(rate(flask_http_request_total{namespace="demo",service="demo-api"}[1m])), 0.001)
-```
+### SLO and alerting
 
-## SLO and alerting
+File:
 
-Target idea:
+- `k8s-api/prometheus-rule.yaml`
+
+Target:
 
 - availability SLO: `99%`
 - error budget: `1%`
 
-Implemented file:
-
-- `k8s-api/prometheus-rule.yaml`
-
-Alerts:
+Implemented alerts:
 
 - `DemoApiHighErrorRateFastBurn`
 - `DemoApiHighErrorRateSlowBurn`
 
-Thresholds:
+### Canary
 
-- fast burn: `14.4x` budget on `5m` and `1h`
-- slow burn: `6x` budget on `30m` and `6h`
-
-These follow the multi-window burn-rate direction from the afternoon slide.
-
-## Canary logic
-
-Implemented files:
+Files:
 
 - `k8s-api/rollout.yaml`
 - `k8s-api/analysis-template.yaml`
 
-Canary steps:
+Rollout flow:
 
 1. `25%`
-2. wait `60s`
+2. pause for `60s`
 3. `50%`
-4. wait `60s`
+4. pause for `60s`
 5. `100%`
 
-The `AnalysisTemplate` judges success rate from Prometheus.
+The `AnalysisTemplate` evaluates success rate from Prometheus metrics.
 
-Current success condition:
+## Evidence
 
-- success rate `>= 95%`
+### 1. ArgoCD overview
 
-## Demo plan
+All new components are managed through GitOps.
 
-### Good release
+![ArgoCD overview](images/argo_overview.png)
 
-1. build a new backend image tag
-2. change version or image in Git
-3. merge
-4. verify rollout reaches `100%`
+### 2. Frontend running inside the cluster
 
-### Bad release
+The frontend can successfully call the backend and display runtime information.
 
-1. inject error with `ERROR_RATE=0.3` or higher
-2. build a new backend image tag
-3. update Git
-4. merge
-5. observe canary fail and stop/abort
+![Frontend overview](images/fe_overview.png)
+
+### 3. Metrics in Prometheus
+
+Prometheus is scraping `demo-api` successfully.
+
+![Metric overview](images/metric_overview.png)
+
+![Metric overview 2](images/metric_overview1.png)
+
+### 4. Good release / canary
+
+Canary rollout is executed through `Rollout` and `AnalysisRun`.
+
+![Canary 1](images/canary1.png)
+
+![Canary 2](images/canary2.png)
+
+![Canary 3](images/canary3.png)
+
+![Canary 4](images/canary4.png)
+
+![Canary 5](images/canary5.png)
+
+![Canary 6](images/canary6.png)
+
+### 5. Alerts and analysis
+
+Metrics and alerting provide the evaluation signal for release quality.
+
+![Alert 1](images/alert1.png)
+
+![Alert 2](images/alert2.png)
+
+![Alert 3](images/alert3.png)
+
+### 6. Release state
+
+Release snapshot from the deployment flow.
+
+![Release](images/release.png)
+
+## Demo script
+
+Suggested presentation flow:
+
+1. open ArgoCD and show `root`, `kube-prometheus-stack`, `argo-rollouts`, `demo-api`, and `demo-web`
+2. open `demo-web`, click `Call API`, then `Burst x20`
+3. open Prometheus and show `demo-api` metrics
+4. show `PrometheusRule`
+5. show the canary rollout for the good `v2` release
+6. show Git-based rollback using `git revert`
 
 ## Rollback
 
-Rollback remains Git-first:
+Rollback stays Git-first:
 
 ```bash
 git revert <commit>
 git push
 ```
 
-This keeps the GitOps source of truth intact.
+This preserves Git as the single source of truth.
 
-## Remaining gap for a full challenge submission
+## Current status
 
-What is already present:
+The project currently includes:
 
-- rollout
-- analysis template
-- service monitor
-- SLO-style alert rules
-- README with queries and thresholds
-
-What still needs real environment-specific setup if required by mentor:
-
-- personal email receiver wiring in Alertmanager
-- screenshots or clip proving auto-abort
-- one explicit bad release demo commit
+- frontend and backend running inside Kubernetes
+- `ServiceMonitor`
+- `PrometheusRule`
+- `Rollout`
+- `AnalysisTemplate`
+- Prometheus metrics
+- a verified good canary release flow
