@@ -30,6 +30,13 @@ Toi da hoan thien phan tiep theo de dua app vao flow GitOps/Kubernetes:
 - `argo-rollouts` trong namespace `argo-rollouts`
 
 Ca 2 deu duoc cai qua `root` app-of-apps, khong can `kubectl apply` tung app.
+Toi da bo sung `sync-wave` o cap `Application` de `root` tao theo thu tu:
+
+- wave `0`: `kube-prometheus-stack`, `argo-rollouts`
+- wave `1`: `demo-api`
+- wave `2`: `demo-web`
+
+Ly do: tranh truong hop frontend len truoc khi service `demo-api` ton tai, lam nginx crash ngay luc boot.
 
 ### Business app
 
