@@ -15,6 +15,9 @@ spec:
       values: |
         grafana:
           adminPassword: admin12345
+        alertmanager:
+          alertmanagerSpec:
+            configSecret: alertmanager-email-config
         prometheus:
           prometheusSpec:
             serviceMonitorNamespaceSelector: {}
